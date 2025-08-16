@@ -207,12 +207,20 @@ export function TripPlanningDialog({ open, onOpenChange }: TripPlanningDialogPro
         },
       };
 
-      // Here you would send to your webhook
-      // For now, we'll just simulate success
-      console.log("Webhook payload:", JSON.stringify(payload, null, 2));
+      // Send to webhook
+      const webhookUrl = "https://goko02.app.n8n.cloud/webhook-test/49ddd5da-cf91-44a3-9fd9-5fa862f18810";
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const response = await fetch(webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload, null, 2),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       
       toast({
         title: "Planning Request Submitted!",
