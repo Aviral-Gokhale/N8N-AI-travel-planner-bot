@@ -44,17 +44,6 @@ export function Hero({ onPlanTrip }: HeroProps) {
             </div>
           </div>
           
-          {/* Right Column - Phone Mockup */}
-          <div className="flex justify-center lg:justify-end order-first lg:order-last">
-            <div className="relative">
-              <img 
-                src="/lovable-uploads/161bfe35-e03f-4594-bfcf-080b108d4bfc.png"
-                alt="Travel planning on laptop in beautiful natural setting"
-                className="w-64 sm:w-80 lg:w-96 h-auto object-contain drop-shadow-2xl"
-                loading="eager"
-              />
-            </div>
-          </div>
         </div>
       </div>
     </section>
