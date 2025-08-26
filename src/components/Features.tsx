@@ -19,11 +19,6 @@ const features = [
     title: "Save Time & Stress",
     description: "Let AI handle the research and planning while you focus on the excitement of travel."
   },
-  {
-    icon: microphoneIcon,
-    title: "Voice Planning",
-    description: "Plan your trips using voice commands with documented email confirmations for every detail."
-  }
 ];
 
 export function Features() {
