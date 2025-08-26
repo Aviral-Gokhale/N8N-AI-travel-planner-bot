@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import varanasiImage from "@/assets/varanasi-ghats-background.jpg";
-import heroPhoneImage from "@/assets/hero-phone.jpg";
 
 interface HeroProps {
   onPlanTrip: () => void;
@@ -51,8 +50,8 @@ export function Hero({ onPlanTrip }: HeroProps) {
           <div className="flex justify-center lg:justify-end order-first lg:order-last">
             <div className="relative">
               <img 
-                src={heroPhoneImage}
-                alt="Travel planning app interface on mobile device"
+                src="/lovable-uploads/161bfe35-e03f-4594-bfcf-080b108d4bfc.png"
+                alt="Travel planning on laptop in beautiful natural setting"
                 className="w-64 sm:w-80 lg:w-96 h-auto object-contain drop-shadow-2xl"
                 loading="eager"
               />
