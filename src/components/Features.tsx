@@ -22,7 +22,7 @@ const features = [
   {
     icon: microphoneIcon,
     title: "Voice Planning",
-    description: "Simply tell us your travel dreams and watch them transform into detailed itineraries."
+    description: "Plan your trips using voice commands with documented email confirmations for every detail."
   }
 ];
 
