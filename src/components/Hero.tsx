@@ -17,8 +17,6 @@ export function Hero({ onPlanTrip }: HeroProps) {
       }}
       aria-label="Hero section with travel planning call to action"
     >
-      {/* Overlay for better text readability */}
-      <div className="absolute inset-0 bg-hero-overlay" />
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
