@@ -208,7 +208,7 @@ export function TripPlanningDialog({ open, onOpenChange }: TripPlanningDialogPro
       };
 
       // Send to webhook
-      const webhookUrl = "https://goko02.app.n8n.cloud/webhook-test/49ddd5da-cf91-44a3-9fd9-5fa862f18810";
+      const webhookUrl = "https://avigoko.app.n8n.cloud/webhook-test/49ddd5da-cf91-44a3-9fd9-5fa862f18810";
       
       const response = await fetch(webhookUrl, {
         method: "POST",
