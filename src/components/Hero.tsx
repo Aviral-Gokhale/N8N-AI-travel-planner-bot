@@ -18,20 +18,19 @@ export function Hero({ onPlanTrip }: HeroProps) {
       aria-label="Hero section with travel planning call to action"
     >
       
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Column - Content */}
-          <div className="text-center lg:text-left space-y-8">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <div className="space-y-8">
             <div className="space-y-4">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-text-hero leading-tight">
                 Your AI Travel Planner
               </h1>
-              <p className="text-lg sm:text-xl text-text-hero/90 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+              <p className="text-lg sm:text-xl text-text-hero/90 max-w-lg mx-auto leading-relaxed">
                 Create personalized itineraries tailored to your dreams. Stress-free planning powered by intelligent AI.
               </p>
             </div>
             
-            <div className="flex justify-center lg:justify-start">
+            <div className="flex justify-center">
               <Button 
                 variant="hero" 
                 size="lg"
@@ -43,7 +42,6 @@ export function Hero({ onPlanTrip }: HeroProps) {
               </Button>
             </div>
           </div>
-          
         </div>
       </div>
     </section>
