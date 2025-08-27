@@ -1,0 +1,684 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "49ddd5da-cf91-44a3-9fd9-5fa862f18810",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5c08f25f-9bba-49db-9319-4b7ac6f48df6",
+      "name": "Webhook",
+      "webhookId": "49ddd5da-cf91-44a3-9fd9-5fa862f18810"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert travel planner and a destination recommendation specialist. Your task is to first create a detailed, day-by-day travel itinerary, and then provide three alternative destination recommendations based on the user's detailed travel preferences.\n\n---\n\n**Part 1: Itinerary Generation**\nCreate a comprehensive point-wise, well-formatted, day-by-day itinerary using all the following trip details. The itinerary should be highly personalised and practical.\n\n**Trip Details:**\n* **Destination:** {{$json.body.trip.destination}}\n* **Origin:** {{$json.body.trip.origin}}\n* **Dates:** {{$json.body.trip.dates.startDate}} to {{$json.body.trip.dates.endDate}}\n* **Number of Travellers:** \n{{ $json.body.travellers.breakdown.adults }}adults, \n{{ $json.body.travellers.breakdown.children }}children, \n{{ $json.body.travellers.breakdown.seniors }}seniors\n* **Total Budget:** {{$json.body.budget.total.amount}} {{$json.body.budget.total.currency}}\n* **Transportation:** {{$json.body.preferences.transportation}}\n* **Interests:** {{$json.body.preferences.interests}}\n* **Special Requests:** {{$json.body.preferences.specialRequests}}\n\nFor each day of the itinerary, include specific attractions, food recommendations, and a useful travel tip. Ensure all recommendations align with the stated budget and special requests.\n\n---\n\n**Part 2: Destination Recommendations**\nBased on the user's stated interests, total budget, and starting city, recommend three alternative destinations. For each recommendation, provide:\n1.  The name of the destination.\n2.  A brief paragraph explaining why it's a good fit, specifically referencing their interests and budget.\n3.  A short 'Why it's unique' summary.\n\nEnsure the final output is well-structured and easy to read.",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=You are a highly efficient and professional travel planning AI. Your mission is to create detailed, structured itineraries and provide relevant travel recommendations based on the user's precise data. Please don't include any personal greetings, conversational filler, or disclaimers. I'd like you to focus exclusively on generating a point-wise, well-formatted and helpful response."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "013ab9d8-2e5d-41f3-987b-d7269943ecf9",
+      "name": "AI Agent",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "driveId": "=drive",
+        "folderId": "=1OFhIj3TsEHxzSPdIV6JhGNSh9_zpeTEt",
+        "title": "={{ $('Webhook').item.json.body.trip.destination }} Travel Itinerary"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        576,
+        0
+      ],
+      "id": "7f458cab-9c12-4d1d-8664-0fec9e3b104f",
+      "name": "Create a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "T6ZMQ8ENxYomyXbb",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "locationChoice": "location",
+              "text": "={{ $('AI Agent').item.json.output }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        800,
+        0
+      ],
+      "id": "098f37d1-84be-466c-9596-e4b001e78024",
+      "name": "Update a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "T6ZMQ8ENxYomyXbb",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.documentId }}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "={{ $json.documentId }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1024,
+        0
+      ],
+      "id": "7530527a-efc9-4512-b73d-88fac500275b",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "bU2zJxro5YNU72DL",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        160,
+        208
+      ],
+      "id": "9b705a76-e987-483c-b86d-3fcb3cb03a04",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3zygluKvZBHaZbdX",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook').item.json.body.trip.email }}",
+        "subject": "=Your Personalised Trip Itinerary for {{ $('Webhook').item.json.body.trip.destination }} is Ready!",
+        "message": "=<p>Hello! </p>\n<p>Your personalised itinerary is ready. I hope you enjoy your trip to {{ $('Webhook').item.json.body.trip.destination }}!</p> \n<br> \n<p>Here is your custom plan</p>  \n<p>Safe travels,<br> Your Personal AI Travel Planner</p>",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "={{ $json.documentId }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "1c110345-486f-4a48-8372-db5b5ddff897",
+      "name": "Send a message",
+      "webhookId": "b1651efd-284e-475e-a6da-147351e46423",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8oOhWb7yhznhU2Yb",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-3-haiku",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        320,
+        256
+      ],
+      "id": "92a37a15-1f4c-49a4-96f8-7212a2d8c05b",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "oeGsjd6QWz4lIe14",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        96,
+        464
+      ],
+      "id": "32a1f3d0-726c-4a94-a467-ef133c01d2ae",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "14gFlhZsy3M2wkqGpWsJdryNtv-ftvY9PJubYRbEl6vw",
+          "mode": "list",
+          "cachedResultName": "Error in travel plan ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14gFlhZsy3M2wkqGpWsJdryNtv-ftvY9PJubYRbEl6vw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14gFlhZsy3M2wkqGpWsJdryNtv-ftvY9PJubYRbEl6vw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.execution.id }}",
+            "Message": "={{ $json.execution.error.message }}",
+            "Stack": "={{ $json.execution.error.stack }}",
+            "Error node": "={{ $json.execution.lastNodeExecuted }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Error node",
+              "displayName": "Error node",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Stack",
+              "displayName": "Stack",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        304,
+        464
+      ],
+      "id": "749119f0-86bd-4294-8009-b9b620c1effe",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8XKRbx8XneK7bbY8",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1RkJ6QCBEUmb39uYwBMDSiX1fI9SLKxdWtFmEIhnlU0I",
+          "mode": "list",
+          "cachedResultName": "Travel Plan Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RkJ6QCBEUmb39uYwBMDSiX1fI9SLKxdWtFmEIhnlU0I/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RkJ6QCBEUmb39uYwBMDSiX1fI9SLKxdWtFmEIhnlU0I/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "EmailID": "={{ $('Webhook').item.json.body.trip.email }}",
+            "startingFrom": "={{ $('Webhook').item.json.body.trip.origin }}",
+            "destination": "={{ $('Webhook').item.json.body.trip.destination }}",
+            "startDate ": "={{ $('Webhook').item.json.body.trip.dates.startDate }}",
+            "endDate": "={{ $('Webhook').item.json.body.trip.dates.endDate }}",
+            "days": "={{ $('Webhook').item.json.body.trip.dates.duration.days }}",
+            "night": "={{ $('Webhook').item.json.body.trip.dates.duration.nights }}",
+            "adults": "={{ $('Webhook').item.json.body.travellers.breakdown.adults }}",
+            "seniors": "={{ $('Webhook').item.json.body.travellers.breakdown.seniors }}",
+            "children": "={{ $('Webhook').item.json.body.travellers.breakdown.children }}",
+            "currency": "={{ $('Webhook').item.json.body.budget.total.currency }}",
+            "totalBudget": "={{ $('Webhook').item.json.body.budget.total.amount }}",
+            "transportation": "={{ $('Webhook').item.json.body.preferences.transportation }}",
+            "interests": "={{ $('Webhook').item.json.body.preferences.interests }}",
+            "specialRequests": "={{ $('Webhook').item.json.body.preferences.specialRequests }}"
+          },
+          "matchingColumns": [
+            "EmailID"
+          ],
+          "schema": [
+            {
+              "id": "EmailID",
+              "displayName": "EmailID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "startingFrom",
+              "displayName": "startingFrom",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destination",
+              "displayName": "destination",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "startDate ",
+              "displayName": "startDate ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "endDate",
+              "displayName": "endDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "days",
+              "displayName": "days",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "night",
+              "displayName": "night",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "adults",
+              "displayName": "adults",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "children",
+              "displayName": "children",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "seniors",
+              "displayName": "seniors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "currency",
+              "displayName": "currency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "totalBudget",
+              "displayName": "totalBudget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "transportation",
+              "displayName": "transportation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "interests",
+              "displayName": "interests",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "specialRequests",
+              "displayName": "specialRequests",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        608,
+        224
+      ],
+      "id": "14620264-b643-4b34-a086-b50f9b0dce81",
+      "name": "Append or update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8XKRbx8XneK7bbY8",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "avigoko.app.n8n.cloud",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+            "content-length": "1064",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-US,en;q=0.6",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "49.47.9.129",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "IN",
+            "cf-ray": "9755a6c885c6184c-MRS",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "origin": "https://preview--serene-sojourn-bot.lovable.app",
+            "priority": "u=1, i",
+            "referer": "https://preview--serene-sojourn-bot.lovable.app/",
+            "sec-ch-ua": "\"Not;A=Brand\";v=\"99\", \"Brave\";v=\"139\", \"Chromium\";v=\"139\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "sec-gpc": "1",
+            "x-forwarded-for": "49.47.9.129, 162.158.22.92",
+            "x-forwarded-host": "avigoko.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-29-677bf4754f-44h7d",
+            "x-is-trusted": "yes",
+            "x-real-ip": "49.47.9.129"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "requestId": "d4c32257-aaea-4596-9770-f895e6f0833a",
+            "timestamp": "2025-08-26T19:14:19.028Z",
+            "trip": {
+              "email": "gokoaviral@gmail.com",
+              "origin": "Raipur",
+              "destination": "Mysore",
+              "dates": {
+                "startDate": "2025-08-28",
+                "endDate": "2025-09-03",
+                "duration": {
+                  "days": 6,
+                  "nights": 5
+                }
+              }
+            },
+            "travellers": {
+              "total": 4,
+              "breakdown": {
+                "adults": 4,
+                "children": 0,
+                "seniors": 0
+              }
+            },
+            "budget": {
+              "total": {
+                "amount": 20000,
+                "currency": "INR"
+              },
+              "perPerson": {
+                "amount": 5000,
+                "currency": "INR"
+              },
+              "perDay": {
+                "amount": 3333.33,
+                "currency": "INR"
+              }
+            },
+            "preferences": {
+              "transportation": "train",
+              "interests": [],
+              "specialRequests": "Vegetarian diet"
+            },
+            "metadata": {
+              "source": "travel-planner-web",
+              "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+              "submitTime": "2025-08-26T19:14:19.028Z"
+            }
+          },
+          "webhookUrl": "https://avigoko.app.n8n.cloud/webhook-test/49ddd5da-cf91-44a3-9fd9-5fa862f18810",
+          "executionMode": "test"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Create a document",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append or update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a document": {
+      "main": [
+        [
+          {
+            "node": "Update a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a document": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0497e7c4-d940-4757-ba60-bdcaf6ff399b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3e732de951ff3f9b38c0ba7ab52ae9d2d3b8571e3205b4ec3d34f80f8ff1ef7d"
+  },
+  "id": "v6lpiULKWzp3h4d4",
+  "tags": []
+}
